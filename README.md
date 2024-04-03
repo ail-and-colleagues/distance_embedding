@@ -3,9 +3,11 @@
 
 ## train_test_dataset.py
 次図のようなランダムな位置に配置したノードを用い検証を行ったもの。
+
 ![image](./assets/test_dataset_gt.png)
 
 以下のデータセット・モデルで学習すると、次図のようにノードの位置が教師として与えた距離関係に最適化される。
+
 ![image](./assets/test_dataset_proc.gif)
 
 ### test_dataset.py
