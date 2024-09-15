@@ -25,6 +25,17 @@ class embedding(torch.nn.Module):
     def forward(self, x):
         x = F.linear(x, self.weight) 
         return x
+    
+class scaling(torch.nn.Module):
+    def __init__(self, init_scale=1.0):
+        super(scaling, self).__init__()
+        self.weight = torch.nn.Parameter(data=torch.tensor(init_scale).float())
+
+        print('init_scale: ', self.weight)
+
+    def forward(self, x):
+        x = torch.mul(x, self.weight) 
+        return x
 
 class Dist2Pos(torch.nn.Module):
     def __init__(self, node_num, embed_dim, w=None):
@@ -33,15 +44,20 @@ class Dist2Pos(torch.nn.Module):
         self.node_num = node_num
         self.embed_dim = embed_dim
         self.lin = embedding(self.node_num, self.embed_dim, w)
+        self.scl = scaling()
 
     def forward(self, x):
         x = x.to(torch.float32)
         x = self.lin(x)
+        x = self.scl(x)
         return x
     
     def fetch(self):
         w = self.lin.weight
-        return w.to('cpu').detach().numpy().copy() 
+        w = w.to('cpu').detach().numpy().copy()
+        s = self.scl.weight
+        s = s.to('cpu').detach().numpy().copy()
+        return w, s
 
 if __name__ == "__main__":
     n = 10

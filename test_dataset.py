@@ -26,7 +26,7 @@ class Random_Dataset(Dataset):
         pos_a = self.node_pos[a]
         pos_b = self.node_pos[b]
         # y (grandtruth)
-        dist = np.linalg.norm(pos_b - pos_a)
+        dist = np.linalg.norm(pos_b - pos_a) * 7.78
         return (a.astype(np.int64), b.astype(np.int64)), dist.astype(np.float32)
 
 def draw_map(dst, data, labels):
