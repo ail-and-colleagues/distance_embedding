@@ -4,7 +4,7 @@ from sklearn.manifold import TSNE
 from sklearn.metrics import pairwise_distances
 
 
-from dataset import Random_Dataset, draw_map
+from test_dataset import Random_Dataset, draw_map
 
 def calc_dist_mtx(x):
     return pairwise_distances(x, x, metric='euclidean', n_jobs=-1)
