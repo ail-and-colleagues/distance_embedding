@@ -31,10 +31,10 @@ def train(image_path):
     # set parameters.
 
     embed_dim = 2
-    batch_size = 64
+    batch_size = 256
     batch_p_ep = 500
     mx_ep = 300
-    hundle_nodes_num = 100
+    hundle_nodes_num = 1000
     lr = 0.001
 
     
@@ -42,7 +42,7 @@ def train(image_path):
     train_loader = DataLoader(train_set, batch_size=batch_size)
     
     # define model.
-    d2p = Dist2Pos(hundle_nodes_num, embed_dim, w=train_set.hundled_nodes / 10.0).to(device)
+    d2p = Dist2Pos(hundle_nodes_num, embed_dim, w=train_set.hundled_nodes / 10.0, scale=10.0).to(device)
 
     criterion = torch.nn.L1Loss()
     optimizer = torch.optim.Adam(d2p.parameters(), lr=lr)
@@ -97,10 +97,10 @@ def train(image_path):
             embed, scale = d2p.fetch()
             embed = embed.T
             dist_mtx = calc_dist_mtx(embed)
-            draw_map(dst, embed, range(train_set.hundle_nodes_num))
+            # draw_map(dst, embed, range(train_set.hundle_nodes_num))
 
-            dst = os.path.join(output_dir, 'deformed_{:03d}_{:.5f}.png'.format(ep, loss_mean))
-            draw_image(dst, train_set.image.copy(), train_set.hundled_nodes.copy(), embed)
+            dst_name = 'deformed_{:03d}_{:.5f}.png'.format(ep, loss_mean)
+            draw_image(output_dir, dst_name, train_set.image.copy(), train_set.hundled_nodes.copy(), embed)
 
             print('_dist_mtx.shape: ', dist_mtx.shape)
             print(dist_mtx[:5, :5])

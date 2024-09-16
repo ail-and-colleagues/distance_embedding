@@ -38,13 +38,13 @@ class scaling(torch.nn.Module):
         return x
 
 class Dist2Pos(torch.nn.Module):
-    def __init__(self, node_num, embed_dim, w=None):
+    def __init__(self, node_num, embed_dim, w=None, scale=None):
         super(Dist2Pos, self).__init__()
 
         self.node_num = node_num
         self.embed_dim = embed_dim
         self.lin = embedding(self.node_num, self.embed_dim, w)
-        self.scl = scaling()
+        self.scl = scaling(scale)
 
     def forward(self, x):
         x = x.to(torch.float32)
