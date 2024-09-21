@@ -33,7 +33,7 @@ def train(image_path):
     embed_dim = 2
     batch_size = 256
     batch_p_ep = 500
-    mx_ep = 300
+    mx_ep = 100
     hundle_nodes_num = 1000
     lr = 0.001
 
@@ -45,6 +45,8 @@ def train(image_path):
     d2p = Dist2Pos(hundle_nodes_num, embed_dim, w=train_set.hundled_nodes / 10.0, scale=10.0).to(device)
 
     criterion = torch.nn.L1Loss()
+    # criterion = torch.nn.MSELoss()
+
     optimizer = torch.optim.Adam(d2p.parameters(), lr=lr)
 
     # output grandtrutha as gt.png.
@@ -80,8 +82,8 @@ def train(image_path):
                 emb_b = d2p(b)
                 pred = torch.linalg.norm(emb_b - emb_a, dim=1)
 
-                dist = torch.log(dist) + 1
-                pred = torch.log(pred) + 1
+                # dist = torch.log(dist * np.e)
+                # pred = torch.log(pred * np.e)
 
                 loss = criterion(dist, pred)
                 loss.backward()

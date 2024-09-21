@@ -228,7 +228,9 @@ def draw_map(dst, data, labels):
     plt.close()
 
 def draw_image(dst_dir, dst_name, image, begs, ends):
-    tps = cv2.createThinPlateSplineShapeTransformer()
+
+    begs = begs.astype(np.float32)
+    ends = ends.astype(np.float32)
 
     begs = begs[:, ::-1]
     ends = ends[:, ::-1]
@@ -262,16 +264,19 @@ def draw_image(dst_dir, dst_name, image, begs, ends):
         matches.append(cv2.DMatch(i,i,0))
 
     
-    # tps.estimateTransformation(ends, begs, matches)
-    # ret, ends_ = tps.applyTransformation(begs)
-    # print(ends[0, :10])
-    # print(ends_[0, :10])
 
-    # tps = cv2.createThinPlateSplineShapeTransformer()
-    tps.estimateTransformation(ends, begs, matches)
+    tps = cv2.createThinPlateSplineShapeTransformer()
+    tps.estimateTransformation(begs, ends, matches)
     # tps.estimateTransformation(begs, ends, matches)
 
+    ret, tfd_beg = tps.applyTransformation(begs)
+    print('!ends[0, :10]: ', ends[0, :10])
+    print('!tfd_beg[0, :10]: ', tfd_beg[0, :10])
 
+
+    # image deforming requires "ends->begs" transformation? 
+    tps = cv2.createThinPlateSplineShapeTransformer()
+    tps.estimateTransformation(ends, begs, matches)
 
     deformed = tps.warpImage(image, flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE, borderValue=(127, 1127, 127))
 
@@ -279,22 +284,25 @@ def draw_image(dst_dir, dst_name, image, begs, ends):
         p = (int(p[0]), int(p[1]))
         cv2.circle(deformed, p, 1, (255, 0, 0), thickness=-1)
 
-    mask = np.zeros_like(deformed)
+    # mask = np.zeros_like(deformed)
 
-    for i, p in enumerate(ends.reshape(-1, 2)):
-        p = (int(p[0]), int(p[1]))
-        cv2.circle(mask, p, farthest_dists[i], (255, 255, 255), thickness=-1)
-    cv2.imwrite('./outputs/mask.png', mask)
+    # for i, p in enumerate(ends.reshape(-1, 2)):
+    #     p = (int(p[0]), int(p[1]))
+    #     cv2.circle(mask, p, farthest_dists[i], (255, 255, 255), thickness=-1)
+    # cv2.imwrite('./outputs/mask.png', mask)
 
     # deformed = cv2.bitwise_and(deformed, mask)
     dst = os.path.join(dst_dir, dst_name)                    
     cv2.imwrite(dst, deformed.copy())
 
+
+    node_only = np.zeros_like(deformed)
     for i, p in enumerate(ends.reshape(-1, 2)):
         p = (int(p[0]), int(p[1]))
-        cv2.putText(deformed, str(i), p, cv2.FONT_HERSHEY_SIMPLEX, 0.25, (0, 0, 255), 1, cv2.LINE_AA)
+        cv2.circle(node_only, p, 1, (255, 255, 255), thickness=-1)
+
     dst = os.path.join(dst_dir, '_' + dst_name)
-    cv2.imwrite(dst, deformed)
+    cv2.imwrite(dst, node_only)
 
 def get_path(start, goal, pred):
     return get_path_row(start, goal, pred[start])
