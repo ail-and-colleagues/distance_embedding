@@ -82,8 +82,8 @@ def train(image_path):
                 emb_b = d2p(b)
                 pred = torch.linalg.norm(emb_b - emb_a, dim=1)
 
-                # dist = torch.log(dist * np.e)
-                # pred = torch.log(pred * np.e)
+                dist = torch.log(dist * np.e)
+                pred = torch.log(pred * np.e)
 
                 loss = criterion(dist, pred)
                 loss.backward()
