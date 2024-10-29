@@ -29,12 +29,7 @@ class Random_Dataset(Dataset):
         
         # x (inputs of a network)
         a, b = np.random.choice(self.node_num, 2, replace=False)
-        pos_a = self.node_pos[a]
-        pos_b = self.node_pos[b]
-        # y (grandtruth)
         dist_matrix=convert_dataset.exsit_2_number('dis')[0]
-        #dist_matrix=np.array([[0,1,4,6,6],[1,0,3,5,5],[4,3,0,2,2],[6,5,2,0,4],[5,]])
-        ##dist = np.linalg.norm(pos_b - pos_a)
         dist = dist_matrix[a,b]
         return (a.astype(np.int64), b.astype(np.int64)), dist.astype(np.float32)
         

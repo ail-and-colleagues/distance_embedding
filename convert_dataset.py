@@ -32,13 +32,13 @@ class network_test():
         plt.show()
 
 def convert_exist2pos(exist_mat,unit_h,unit_v):
-    mat_x = exist_mat.shape[1]
-    mat_y = exist_mat.shape[0]
+    mat_x = exist_mat[0].shape[1]
+    mat_y = exist_mat[0].shape[0]
     pos_mat=np.arange(2).reshape(1,2)
     i = 0
     for y in range(mat_y):
         for x in range(mat_x):
-            if(exist_mat[y,x]==1):
+            if(exist_mat[0][y,x]==1):
                 posi = np.array([(-mat_x+x)*unit_h,(mat_y-y)*unit_v]).reshape(1,2)
                 pos_mat=np.vstack((pos_mat,posi))
                 i += 1
@@ -46,6 +46,15 @@ def convert_exist2pos(exist_mat,unit_h,unit_v):
     pos_mat=np.delete(pos_mat,0,axis=0)
     return(pos_mat,i)
 
+def adj_node_tf(n,max):
+    if 0<n<max:
+        adj_range=np.array([-1,0,1])
+    elif n==0:
+        adj_range=np.array([0,1])
+    else:
+        adj_range=np.array([-1,0])
+    return adj_range
+        
 
 def make_dist_mat(node_mat,unit_h,unit_v):
     f_inf=99999
@@ -59,23 +68,13 @@ def make_dist_mat(node_mat,unit_h,unit_v):
     mat_temp=np.identity(mat_y*mat_x)   #(x*y)次元の単位行列を生成
     con_mat = np.where(mat_temp==0,f_inf,0).astype(np.float32)
     for y in range(mat_y):  #n行目の処理
-        if 0<y<mat_y-1:
-            y_temp_range=[-1,0,1]
-        elif y==0:
-            y_temp_range=[0,1]
-        else:
-            y_temp_range=[-1,0]
+        y_temp_range=adj_node_tf(y,mat_y-1)
         for x in range(mat_x):  #m列目の処理
-            if 0<x<mat_x-1:
-                x_temp_range=[-1,0,1]
-            elif x==0:
-                x_temp_range=[0,1]
-            else:
-                x_temp_range=[-1,0]
-            if node_mat[0][y,x]!=0:
+            x_temp_range=adj_node_tf(x,mat_x-1)
+            if node_mat[0][y,x]!=0: #node=trueのマスの時    
                 for y_temp in y_temp_range:
                     for x_temp in x_temp_range:
-                        if(node_mat[0][y+y_temp,x+x_temp]==1):
+                        if(node_mat[0][y+y_temp,x+x_temp]==1):  #隣接マスがtrueのとき
                             if(x_temp*y_temp!=0):
                                 con_mat[(mat_x)*y+x,(mat_x)*(y+y_temp)+x+x_temp]=unit_diag
                             elif(x_temp==0 and y_temp==0):
@@ -88,6 +87,9 @@ def make_dist_mat(node_mat,unit_h,unit_v):
         for i in range(mat_all):
             for j in range(mat_all):
                 con_mat[i,j] = min(con_mat[i,j],con_mat[i,k]+con_mat[k,j])
+    for l in range(mat_all-1,0,-1):
+        if con_mat[0,l]==f_inf:
+            con_mat=np.delete(np.delete(con_mat,l,0),l,1)
     return(con_mat,0)
 
 def get_train_dataset(mode):
@@ -115,8 +117,7 @@ def get_train_dataset(mode):
     elif mode=='node_exist':
         rt_data = np.array([
             [1,1,1,1],
-            [1,1,0,1],
-            [0,0,1,1],
+            [1,0,0,1],
             [1,1,1,1]
             ]).astype(np.uint8)
         #9*9glid

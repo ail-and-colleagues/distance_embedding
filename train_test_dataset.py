@@ -12,7 +12,9 @@ from torchinfo import summary
 from torch.utils.data import DataLoader
 
 #from t_sne import TSNE_Embedder, calc_dist_mtx
-from t_sne import calc_dist_mtx
+#from t_sne import calc_dist_mtx
+from sklearn.metrics import pairwise_distances
+
 
 from test_dataset import Random_Dataset, draw_map
 from model import Dist2Pos
@@ -23,9 +25,14 @@ import math
 
 import convert_dataset as con_d 
 
+### calc_dis_mtx() was transported from t_sne.py
+def calc_dist_mtx(x):
+    return pairwise_distances(x, x, metric='euclidean', n_jobs=-1)
+###
+
 def train(st_num):
     #機械学習の処理先指定
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     
     #出力ディレクトリの指定
     output_dir = datetime.datetime.now().strftime("%Y%m%d_%H_%M_")
@@ -59,15 +66,6 @@ def train(st_num):
     # output grandtrutha as gt.png.
     dst = os.path.join(output_dir, 'gt.png')
     draw_map(dst, train_set.node_pos, range(train_set.node_num))
-
-    # t-sne output for comparison.
-    #----------------------------------------------------
-    # dst = os.path.join(output_dir, 'tsne_pred.png')
-    # tsne = TSNE_Embedder(perplexity=5, n_iter=25000, s_random=0)
-    # embed = tsne.fit(train_set.node_pos)
-    # draw_map(dst, embed, range(train_set.node_num))
-    #----------------------------------------------------    
-
 
     # trainig loop.
     for ep in range(mx_ep):
@@ -110,7 +108,7 @@ def train(st_num):
             draw_map(dst, embed, range(train_set.node_num))
 
             print("_dist_mtx.shape: ", dist_mtx.shape)
-            print(dist_mtx[:5, :5])
+            print(dist_mtx[:7, :7])
 
     rename = output_dir[:-1]
     os.rename(output_dir, rename)
