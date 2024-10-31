@@ -8,11 +8,12 @@ import datetime
 import convert_dataset
 
 class Random_Dataset(Dataset):
-    def __init__(self, node_num, pos_dim, batch_size, batch_p_ep):
+    def __init__(self, node_num, pos_dim, batch_size, batch_p_ep,dis_mtx):
         self.node_num = node_num    #N,駅の数
         self.pos_dim = pos_dim      #d,平面図上ならpos_dim=2
         self.batch_size = batch_size
         self.batch_p_ep = batch_p_ep
+        self.dis_mtx = dis_mtx
         
         # This dataset aims to test the feasibility of estimating nodes' position from distances (in actual uses, represented by not Euclid distances).
         # Thus the dataset provides a pair of nodes as input(x) and the distance between the pair as the ground truth (y).
@@ -29,7 +30,7 @@ class Random_Dataset(Dataset):
         
         # x (inputs of a network)
         a, b = np.random.choice(self.node_num, 2, replace=False)
-        dist_matrix=convert_dataset.exsit_2_number('dis')[0]
+        dist_matrix=self.dis_mtx
         dist = dist_matrix[a,b]
         return (a.astype(np.int64), b.astype(np.int64)), dist.astype(np.float32)
         

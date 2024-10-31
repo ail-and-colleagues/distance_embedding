@@ -39,6 +39,8 @@ def train(st_num):
     output_dir = os.path.join('./outputs', output_dir)
     os.makedirs(output_dir, exist_ok=True)
     
+    make_dist_mtx = con_d.exsit_2_number('dis')[0]
+
     # set parameters.
     if st_num == 0:
         node_num = con_d.exsit_2_number('pos')[1]
@@ -50,7 +52,7 @@ def train(st_num):
     batch_p_ep = 5120   #
     mx_ep = 50 #
 
-    train_set = Random_Dataset(node_num, pos_dim, batch_size, batch_p_ep)
+    train_set = Random_Dataset(node_num, pos_dim, batch_size, batch_p_ep, make_dist_mtx)
     train_loader = DataLoader(train_set, batch_size=batch_size)
     
     dist_mtx = calc_dist_mtx(train_set.node_pos)
