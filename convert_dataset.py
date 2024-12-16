@@ -3,6 +3,7 @@ from torch.utils.data import Dataset
 
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 import networkx as nx
 import datetime
@@ -10,6 +11,8 @@ import datetime
 #class iroiro_info():
 #def __init__(self,dataset):
 #    self.dataset=dataset
+
+f_inf = np.inf
 
 class network_test():
     def __init__(self,node_name,edge_con,edge_w) :
@@ -57,7 +60,6 @@ def adj_node_tf(n,max):
         
 
 def make_dist_mat(node_mat,unit_h,unit_v):
-    f_inf=99999
     #node_mat: ノードTFを持った行列
     #unit_h:    水平ノード距離
     #unit_v:    垂直ノード距離
@@ -67,6 +69,8 @@ def make_dist_mat(node_mat,unit_h,unit_v):
     mat_all = (mat_x)*(mat_y)
     mat_temp=np.identity(mat_y*mat_x)   #(x*y)次元の単位行列を生成
     con_mat = np.where(mat_temp==0,f_inf,0).astype(np.float32)
+
+    print("...start making distance matrix...")
     for y in range(mat_y):  #n行目の処理
         y_temp_range=adj_node_tf(y,mat_y-1)
         for x in range(mat_x):  #m列目の処理
@@ -83,6 +87,42 @@ def make_dist_mat(node_mat,unit_h,unit_v):
                                 con_mat[(mat_x)*y+x,(mat_x)*(y+y_temp)+x+x_temp]=unit_v
                             elif(y_temp==0):
                                 con_mat[(mat_x)*y+x,(mat_x)*(y+y_temp)+x+x_temp]=unit_h
+    return(warshal_floyd(mat_all,con_mat))
+
+def dist_mat_connect(*dist_mat):
+    A = len(dist_mat)  #引数の数    
+    dist_mat_size=np.empty(A,dtype=np.uint16)
+    dist_mat_size_sum = 0
+    
+    print("...combining distance matrixes...")
+    for i in range(A):
+        dist_mat_size[i]=dist_mat[i].shape[0]  #i番目のdist_matのサイズ取得
+        dist_mat_size_sum = dist_mat_size_sum + dist_mat_size[i]
+        #mat_zero[i]=np.full((dist_mat[i].shape[0],dist_mat[i].shape[0]),np.inf)
+    mat_zero=[]
+    
+    for i2 in range(A):
+        mat_zero.append([])
+        for j2 in range(A):
+            if(i2!=j2):
+                mat_zero[i2].append(np.full((dist_mat_size[i2],dist_mat_size[j2]),f_inf))
+            else:
+                mat_zero[i2].append(dist_mat[i2])
+
+    for i3 in range(A):
+        mat_rt_htemp = mat_zero[i3][0]
+        for j3 in range(1,A):
+            mat_rt_htemp=np.hstack([mat_rt_htemp,mat_zero[i3][j3]])
+        con_mat=np.vstack([con_mat,mat_rt_htemp]) if i3!=0 else mat_rt_htemp
+    
+    con_mat[3,6]=1
+    rt=warshal_floyd(dist_mat_size_sum,con_mat)
+    print(rt)
+    return(con_mat)
+    
+def warshal_floyd(mat_all,con_mat):
+    con_mat=np.array(con_mat)
+    print("...start  to calculate time distance...")
     for k in range(mat_all):
         for i in range(mat_all):
             for j in range(mat_all):
@@ -99,15 +139,21 @@ def get_train_dataset(mode):
             [1,1],
             [2,2],
             [1,2],
-            [2,1]
+            [2,1],
+            [1,3],
+            [1,2],
+            [2,2]
             ])
         rt2=rt_data.shape[0]
     elif mode=='distance':  #点同士の所要時間
         rt_data =np.array([
-            [ 0, 4, 1, 1],
-            [ 4, 0, 5, 1],
-            [ 1, 5, 0, 2],
-            [ 1, 1, 2, 0]
+            [ 0, 1, 2, 3 ,0 ,1 ,2],   #1,1
+            [ 1, 0, 1, 2, 1, 2, 3],   #2,2
+            [ 2, 1, 0, 1, 2, 3, 4],   #1,2
+            [ 3, 2, 1, 0, 3, 4, 5],   #2,1
+            [ 0, 1, 2, 3, 0, 1, 2],   #2,3
+            [ 1, 2, 3, 4, 1, 0, 1],   #3,2
+            [ 2, 3, 4, 5, 2, 1, 0]   #3,3
             ])
     elif mode=='conection': #接続された点
         rt_data = np.array([[1,2],
@@ -116,9 +162,11 @@ def get_train_dataset(mode):
                             [1,2]])
     elif mode=='node_exist':
         rt_data = np.array([
-            [1,1,1,1],
-            [1,0,0,1],
-            [1,1,1,1]
+            [1,1,0,1,1],
+            [1,0,0,0,1],
+            [1,0,0,1,1],
+            [1,1,0,0,1],
+            [1,1,1,1,1]
             ]).astype(np.uint8)
         #9*9glid
     return (rt_data,rt2)
@@ -135,8 +183,31 @@ def exsit_2_number(mode):
         #rt_data=get_train_dataset('distance')
     return(rt_data)
 
+def file_import():
+    path = os.getcwd()
+    with open(path) as f:
+        print(f.read)
+    return(0)
+
+def memo(path,txt):
+    
+    return()
 
 if __name__=="__main__":
+    #mat1 = exsit_2_number("dis")[0]
+    mat1 = np.array([
+        [0,1,2,3],
+        [1,0,1,2],
+        [2,1,0,1],
+        [3,2,1,0]
+    ])
+    mat2 = np.array([
+        [0,3,5],
+        [3,0,2],
+        [5,2,0]
+        ])
+    dist_mat_connect(mat1,mat2)
+
     #a=np.array([
     #        [0,1,1,0],
     #        [1,0,0,1],
@@ -144,10 +215,10 @@ if __name__=="__main__":
     #        [0,1,1,0]
     #    ])
     #G = nx.Graph(a)
-    unit_h=1
-    unit_v=1
-    test_nd = get_train_dataset('node_exist')
-    print(exsit_2_number('dis'))
+#    unit_h=1
+#    unit_v=1
+#    test_nd = get_train_dataset('node_exist')
+#    print(exsit_2_number('dis'))
 #    g_name_list=range(4)
 #    g_conection=([(0,1,1),
 #                  (1,2,1),

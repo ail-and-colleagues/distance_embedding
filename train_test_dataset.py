@@ -30,13 +30,11 @@ def calc_dist_mtx(x):
     return pairwise_distances(x, x, metric='euclidean', n_jobs=-1)
 ###
 
-def train(st_num):
+def train(st_num,output_dir):
     #機械学習の処理先指定
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     
     #出力ディレクトリの指定
-    output_dir = datetime.datetime.now().strftime("%Y%m%d_%H_%M_")
-    output_dir = os.path.join('./outputs', output_dir)
     os.makedirs(output_dir, exist_ok=True)
     
     make_dist_mtx = con_d.exsit_2_number('dis')[0]
@@ -60,7 +58,8 @@ def train(st_num):
     print(dist_mtx[:5, :5])
 
     # define model.
-    d2p = Dist2Pos(node_num, embed_dim, con_d.exsit_2_number('pos')[0]).to(device)
+    d2p = Dist2Pos(node_num, embed_dim).to(device)
+    #d2p = Dist2Pos(node_num, embed_dim, con_d.exsit_2_number('pos')[0]).to(device)
 
     criterion = torch.nn.L1Loss()   #MAE,誤差関数を指定
     optimizer = torch.optim.Adam(d2p.parameters(), lr=0.0001)
@@ -125,11 +124,22 @@ def make_gif_animation(file_path,pic_n,ani_time):
         pictures.append(img)
     pictures[0].save(file_path+'\\stpred_all.gif',save_all=True,append_images=pictures[1:],optimize=True,duration=ani_fps,loop=0)
 
+def rt_dir():
+    output_dir = datetime.datetime.now().strftime("%Y%m%d_%H_%M_")
+    output_dir = os.path.join('./outputs', output_dir)
+    return(output_dir)
+
+def main_func():
+    output_dir=rt_dir()
+    train(0,output_dir)
+    ep_n=sum(os.path.isfile(os.path.join(output_dir, name)) for name in os.listdir(output_dir))-1
+    make_gif_animation(output_dir,ep_n,ep_n/10)
+
 if __name__ == "__main__":
     
-    train(0)
+    #main_func()
     
     defdir='C:\\Users\\yoshi-TKG\\Documents\\VSCode\\outputs\\'
-    file='20240920_16_51_\\'
+    file='20241204_19_41\\'
     output_dir=defdir+file
-    #make_gif_animation(output_dir,21,1.5)
+    make_gif_animation(output_dir,32,1.5)
