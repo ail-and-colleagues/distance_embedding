@@ -104,3 +104,6 @@ networkXを使ったノード配置の図示を試すためのもの。
   - `train_test_dataset.py`の`train()`にて強化学習の計算が遅かった問題を改善
     - distanceの行列を算出するたびに毎回`make_dist_mat()`が呼び出されていたのが原因
     - `test_dataset.py`内の`Class Random_Dataset()`に引数`dis_mtx`を追加し、distanceの行列を参照で渡せるように変更
+- **2024.12.16**
+  - `dist_mat_connect()`を追加
+  - 
