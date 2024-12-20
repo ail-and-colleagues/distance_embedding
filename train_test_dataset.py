@@ -37,11 +37,18 @@ def train(st_num,output_dir):
     #出力ディレクトリの指定
     os.makedirs(output_dir, exist_ok=True)
     
-    make_dist_mtx = con_d.exsit_2_number('dis')[0]
+    #make_dist_mtx = con_d.exsit_2_number('dis')[0]
+    mat1_p , mat1_n = con_d.exsit_2_number('pos',0)
+    mat2_p , mat2_n = con_d.exsit_2_number('pos',1)
+    mat1_d = con_d.exsit_2_number('dis',0)[0]
+    mat2_d = con_d.exsit_2_number('dis',1)[0]
+    con_d.draw_map(mat1_p,range(mat1_n))
+    con_d.draw_map(mat2_p,range(mat2_n))
+    make_dist_mtx = con_d.dist_mat_connect(mat1_d,mat2_d)
 
     # set parameters.
     if st_num == 0:
-        node_num = con_d.exsit_2_number('pos')[1]
+        node_num = con_d.exsit_2_number('pos',0)[1]+con_d.exsit_2_number('pos',1)[1]
     else:
         node_num = st_num   #
     pos_dim = 2 #ノードの次元
@@ -126,7 +133,7 @@ def make_gif_animation(file_path,pic_n,ani_time):
 
 def rt_dir():
     output_dir = datetime.datetime.now().strftime("%Y%m%d_%H_%M_")
-    output_dir = os.path.join('./outputs', output_dir)
+    output_dir = os.path.join(os.path.dirname(__file__),"outputs", output_dir)
     return(output_dir)
 
 def main_func():
@@ -137,9 +144,9 @@ def main_func():
 
 if __name__ == "__main__":
     
-    #main_func()
+    main_func()
     
     defdir='C:\\Users\\yoshi-TKG\\Documents\\VSCode\\outputs\\'
     file='20241204_19_41\\'
     output_dir=defdir+file
-    make_gif_animation(output_dir,32,1.5)
+    #make_gif_animation(output_dir,32,1.5)
