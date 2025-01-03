@@ -4,6 +4,7 @@ from torch.utils.data import Dataset
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import itertools
 
 import networkx as nx
 import datetime
@@ -35,17 +36,25 @@ class network_test():
         nx.draw(Gh, with_labels=True)
         plt.show()
 
-def convert_exist2pos(exist_mat,unit_h,unit_v):
-    mat_x = exist_mat[0].shape[1]
-    mat_y = exist_mat[0].shape[0]
+def convert_exist2pos(unit_h,unit_v,*exist_mat):
+    i_rt=0
+    if type(exist_mat)==tuple:
+        i_rt=len(exist_mat)
+        print(exist_mat)
+    else:
+        i_rt=1
+        exist_mat=np.array([exist_mat])
+    i=0
     pos_mat=np.arange(2).reshape(1,2)
-    i = 0
-    for y in range(mat_y):
-        for x in range(mat_x):
-            if(exist_mat[0][y,x]==1):
-                posi = np.array([(-mat_x+x)*unit_h,(mat_y-y)*unit_v]).reshape(1,2)
-                pos_mat=np.vstack((pos_mat,posi))
-                i += 1
+    for i1 in range(i_rt):
+        mat_x = exist_mat[i1][0].shape[1]
+        mat_y = exist_mat[i1][0].shape[0]
+        for y in range(mat_y):
+            for x in range(mat_x):
+                if(exist_mat[i1][0][y,x]==1):
+                    posi = np.array([(-mat_x+x)*unit_h,(mat_y-y)*unit_v]).reshape(1,2)
+                    pos_mat=np.vstack((pos_mat,posi))
+                    i += 1
     #pos_mat=pos_mat.reshape(i,2)
     pos_mat=np.delete(pos_mat,0,axis=0)
     return(pos_mat,i)
@@ -191,20 +200,33 @@ def get_train_dataset(mode,seed=0):
                 [0,0,1,0,0],
                 [1,1,1,1,1],
                 [1,1,1,1,1]
-                
-            ])
+                ]).astype(np.uint8)
         #9*9glid
     elif mode=='connection':
         if (seed==0):
             rt_data=[[0,0],[16,17]]
     return (rt_data,rt2)
 
-def exsit_2_number(mode,seed=0):
+def exsit_2_number(mode,seed=0,test=False):
     h=1
     v=1
-    exs=get_train_dataset('node_exist',seed)
+    if test:
+        if type(seed)==int :
+            print("int")
+            exs=get_train_dataset('node_exist',seed)
+        elif type(seed)==list:
+            rp=len(seed)
+            exs=[]
+            for i1,key1 in enumerate(seed):
+                exs.append(list(get_train_dataset('node_exist',key1)))
+        else:
+            print("other")
+            exs=get_train_dataset('node_exist',seed)
+    else:
+        exs=get_train_dataset('node_exist',seed)
+    print(exs)
     if(mode=='pos'):
-        rt_data=convert_exist2pos(exs,h,v)
+        rt_data=convert_exist2pos(h,v,*exs)
         #rt_data=get_train_dataset('node_pos')
     elif (mode=='dis'):
         rt_data=make_dist_mat(exs,h,v)
@@ -238,10 +260,11 @@ def draw_map(data,labels):
 
 if __name__=="__main__":
     #mat1 = exsit_2_number("dis")[0]
-    mat1_p , mat1_n = exsit_2_number('pos',0)
-    mat2_p , mat2_n = exsit_2_number('pos',1)
-    mat1_d = exsit_2_number('dis',0)[0]
-    mat2_d = exsit_2_number('dis',1)[0]
-    draw_map(mat1_p,range(mat1_n))
-    draw_map(mat2_p,range(mat2_n))
-    dist_mat_connect(mat1_d,mat2_d)
+    #mat1_p , mat1_n = exsit_2_number('pos',0)
+    #mat2_p , mat2_n = exsit_2_number('pos',1)
+    #mat1_d = exsit_2_number('dis',0)[0]
+    #mat2_d = exsit_2_number('dis',1)[0]
+    #draw_map(mat1_p,range(mat1_n))
+    #draw_map(mat2_p,range(mat2_n))
+    #dist_mat_connect(mat1_d,mat2_d)
+    exsit_2_number('pos',[0,1],True)
