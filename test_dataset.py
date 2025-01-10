@@ -8,7 +8,7 @@ import datetime
 import convert_dataset
 
 class Random_Dataset(Dataset):
-    def __init__(self, node_num, pos_dim, batch_size, batch_p_ep,dis_mtx):
+    def __init__(self, node_num, pos_dim, batch_size, batch_p_ep,dis_mtx,mtx_seed):
         self.node_num = node_num    #N,駅の数
         self.pos_dim = pos_dim      #d,平面図上ならpos_dim=2
         self.batch_size = batch_size
@@ -19,7 +19,7 @@ class Random_Dataset(Dataset):
         # Thus the dataset provides a pair of nodes as input(x) and the distance between the pair as the ground truth (y).
         
         #各点の座標を定義:convert_dataset.pyにて記述。
-        self.node_pos=convert_dataset.exsit_2_number('pos')[0]
+        self.node_pos=convert_dataset.exsit_2_number('pos',mtx_seed)[0]
 
     def __len__(self):
         # __len__ returns the number of data to be input in one epoch.
