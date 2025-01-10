@@ -2,7 +2,10 @@ import torch
 from torch.utils.data import Dataset
 
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib  # <--ここを追加
+matplotlib.use('Agg')  # <--ここを追加
+from matplotlib import pyplot as plt
+#import matplotlib.pyplot as plt
 
 import datetime
 import convert_dataset

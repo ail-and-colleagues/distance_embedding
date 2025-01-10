@@ -2,13 +2,16 @@ import torch
 from torch.utils.data import Dataset
 
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib  # <--ここを追加
+matplotlib.use('Agg')  # <--ここを追加
+from matplotlib import pyplot as plt
 import os
 import itertools
 
 import networkx as nx
 import datetime
 
+import glob
 
 #class iroiro_info():
 #def __init__(self,dataset):
@@ -208,7 +211,10 @@ def dist_out(mat_all,con_mat):
     out_mat = np.vstack([n,con_mat])
     n = np.insert(n,0,-1).reshape(-1,1)
     out_mat = np.hstack([n,out_mat])
-    np.savetxt(os.path.join(os.path.dirname(__file__),"outputs",'dist_mat.csv'),con_mat,fmt='%.2f',delimiter='\t')
+    output_dir=os.path.join(dir_processing_file(),'dist_mat.csv')
+
+    np.savetxt(output_dir,out_mat,fmt='%.2f',delimiter='\t')
+
 
 
 def get_train_dataset(mode,seed=0):
@@ -280,7 +286,7 @@ def get_train_dataset(mode,seed=0):
         #9*9glid
     elif mode=='connection':
         if (seed==0):
-            rt_data=[[0,0],[14,14]]
+            rt_data=[[36,36],[5,5],[42,42]]
             rt2=[[1.2]]
     return (rt_data,rt2)
 
@@ -318,11 +324,36 @@ def file_import():
         print(f.read)
     return(0)
 
+def rt_dir(def_dir):
+    #def_dir=os.path.join(os.path.dirname(__file__),"outputs")
+    file_nth=dir_count(def_dir)+1
+    #output_dir = datetime.datetime.now().strftime("%Y%m%d_%H_%M_")
+    output_dir = 'test{:0=3}__processing'.format(file_nth)
+    output_dir = os.path.join(def_dir, output_dir)
+    return(output_dir)
+
+def dir_count(out_dir):
+    file_list=glob.glob(os.path.join(out_dir,'**/'))
+    test_file_n=0
+    for i in range(len(file_list)):
+        file_list[i]=file_list[i].removeprefix(out_dir+'\\')
+        if file_list[i].startswith("test"):
+            test_file_n = test_file_n + 1
+    #print(file_list)
+    return(test_file_n)
+
+def dir_processing_file(n=0):
+    def_dir=os.path.join(os.path.dirname(__file__),"outputs")
+    file_n=n if n!=0 else dir_count(def_dir)
+    file_str="test{:0=3}__processing".format(file_n)
+    return(os.path.join(def_dir,file_str))
+        
+   
 def memo(path,txt):
     
     return()
 
-def draw_map(data,labels):
+def draw_map(data,labels,show=True,save=False,seed_num=0):
     x=data[:,0]
     y=data[:,1]
     fig,ax1=plt.subplots(1,1)
@@ -338,17 +369,23 @@ def draw_map(data,labels):
         # plt.show()
     plt.axis('equal')
     #fig.canvas.mpl_connect('pick_event',onClick)
-    plt.show()
-    
+    if show:
+        plt.show()
+    if save:
+        dir=dir_processing_file()
+        dir=os.path.join(dir,"def_seed{:0=2}_pos.png".format(seed_num))
+        plt.savefig(dir)
+    plt.close()
+
+def map_preview(seed):
+    seed = seed if type(seed)==list else list([seed])
+    for _,map_view in enumerate(seed):
+        map_temp=exsit_2_number('pos',map_view)
+        map_xy=map_temp[0]
+        map_n=map_temp[1]
+        draw_map(map_xy,map_n,show=True,seed_num=map_view)
+
 
 if __name__=="__main__":
-    #mat1 = exsit_2_number("dis")[0]
-    #mat1_p , mat1_n = exsit_2_number('pos',0)
-    #mat2_p , mat2_n = exsit_2_number('pos',1)
-    #mat1_d = exsit_2_number('dis',0)[0]
-    #mat2_d = exsit_2_number('dis',1)[0]
-    #draw_map(mat1_p,range(mat1_n))
-    #draw_map(mat2_p,range(mat2_n))
-    #dist_mat_connect(mat1_d,mat2_d)
     print(exsit_2_number('pos',[0,1])[1])
     print(exsit_2_number('dis',[0,1]))

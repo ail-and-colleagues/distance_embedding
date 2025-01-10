@@ -30,7 +30,7 @@ def calc_dist_mtx(x):
     return pairwise_distances(x, x, metric='euclidean', n_jobs=-1)
 ###
 
-def train(st_num,output_dir,seed,preview=False,memo=""):
+def train(st_num,output_dir,seed,preview=False,memo="",show=True):
     #機械学習の処理先指定
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     
@@ -48,7 +48,7 @@ def train(st_num,output_dir,seed,preview=False,memo=""):
         map_temp=con_d.exsit_2_number('pos',map_view)
         map_xy=map_temp[0]
         map_n=map_temp[1]
-        con_d.draw_map(map_xy,map_n)
+        con_d.draw_map(map_xy,map_n,show=show,save=True,seed_num=map_view)
 
     # set parameters.
     
@@ -56,7 +56,7 @@ def train(st_num,output_dir,seed,preview=False,memo=""):
     embed_dim = 2   #
     batch_size = 64 #
     batch_p_ep = 5120   #
-    mx_ep = 100 #
+    mx_ep = 60 #
 
     train_set = Random_Dataset(node_num, pos_dim, batch_size, batch_p_ep, make_dist_mtx,seed)
     train_loader = DataLoader(train_set, batch_size=batch_size)
@@ -134,27 +134,8 @@ def make_gif_animation(file_path,pic_n=1,ani_time=1):
         pictures.append(img)
     pictures[0].save(file_path+'\\stpred_all.gif',save_all=True,append_images=pictures[1:],optimize=True,duration=ani_fps,loop=0)
 
-def rt_dir(def_dir):
-    #def_dir=os.path.join(os.path.dirname(__file__),"outputs")
-    file_nth=dir_count(def_dir)+1
-    #output_dir = datetime.datetime.now().strftime("%Y%m%d_%H_%M_")
-    output_dir = 'test{:0=3}__processing'.format(file_nth)
-    output_dir = os.path.join(def_dir, output_dir)
-    return(output_dir)
-
-def dir_count(out_dir):
-    file_list=glob.glob(os.path.join(out_dir,'**/'))
-    test_file_n=0
-    for i in range(len(file_list)):
-        file_list[i]=file_list[i].removeprefix(out_dir+'\\')
-        if file_list[i].startswith("test"):
-            test_file_n = test_file_n + 1
-    #print(file_list)
-    return(test_file_n)
-   
-
 def main_func(seed=0,memo=""):
-    output_dir=rt_dir()
+    output_dir=con_d.rt_dir()
     n=con_d.exsit_2_number('pos',seed)[1]
     train(n,output_dir,seed,memo)
     make_gif_animation(output_dir)
@@ -162,29 +143,24 @@ def main_func(seed=0,memo=""):
 
 if __name__ == "__main__":
     
-    tr=True
     tr=False
+    tr=True
     time=2
     memo = ""
-    seed = [2,3]
-    file_n=[136,137,138,139]
+    seed = [0,0]
+    file_n=0
+
+    #con_d.map_preview(seed)
+    
 
     def_dir=os.path.join(os.path.dirname(__file__),"outputs")
-    output_dir=rt_dir(def_dir)
+    output_dir=con_d.rt_dir(def_dir)
     if (tr):
         n=con_d.exsit_2_number('pos',seed)[1]
-        train(n,output_dir,seed,memo)
+        train(n,output_dir,seed,memo,show=False)
     #main_func(seed=seed,memo=memo)
 
-    file_n = file_n if type(file_n)==list else list(file_n)
+    file_n = list([file_n]) if type(file_n)!=list else file_n
     for _,i in enumerate(file_n):
-        file_n=i if file_n!=0 else dir_count(def_dir)
-        file_str="test{:0=3}__processing".format(file_n)
-        ani_dir=os.path.join(os.path.dirname(__file__),"outputs",file_str)
+        ani_dir=con_d.dir_processing_file(i)
         make_gif_animation(ani_dir,ani_time=time)
-
-    #file='20250107_19_11_\\'
-    #output_dir=os.path.join(os.path.dirname(__file__),"outputs", file)
-    #output_dir=os.path.join(os.path.dirname(__file__),"outputs")
-    #dir_count(output_dir)
-    #make_gif_animation(output_dir,25,1.5)
