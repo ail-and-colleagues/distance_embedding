@@ -11,8 +11,8 @@ import datetime
 import convert_dataset
 
 class Random_Dataset(Dataset):
-    def __init__(self, node_num, pos_dim, batch_size, batch_p_ep,dis_mtx,mtx_seed):
-        self.node_num = node_num    #N,駅の数
+    def __init__(self, node_num_sum, pos_dim, batch_size, batch_p_ep,dis_mtx,node_pos):
+        self.node_num_sum = node_num_sum    #N,駅の数
         self.pos_dim = pos_dim      #d,平面図上ならpos_dim=2
         self.batch_size = batch_size
         self.batch_p_ep = batch_p_ep
@@ -22,7 +22,7 @@ class Random_Dataset(Dataset):
         # Thus the dataset provides a pair of nodes as input(x) and the distance between the pair as the ground truth (y).
         
         #各点の座標を定義:convert_dataset.pyにて記述。
-        self.node_pos=convert_dataset.exsit_2_number('pos',mtx_seed)[0]
+        self.node_pos=node_pos
 
     def __len__(self):
         # __len__ returns the number of data to be input in one epoch.
@@ -32,22 +32,22 @@ class Random_Dataset(Dataset):
         #多分ランダムな組み合わせで距離を生成してる
         
         # x (inputs of a network)
-        a, b = np.random.choice(self.node_num, 2, replace=False)
+        a, b = np.random.choice(self.node_num_sum, 2, replace=False)
         dist_matrix=self.dis_mtx
         dist = dist_matrix[a,b]
         return (a.astype(np.int64), b.astype(np.int64)), dist.astype(np.float32)
         
 
-def draw_map(dst, data, labels):
+def draw_map(dst, data, labels, node_color):
     
     x = data[:, 0]
     y = data[:, 1]
     fig = plt.figure()
     ax1 = fig.add_subplot(1, 1, 1)
-    ax1.scatter(x, y, s=50)
-    for i in range(len(labels)):
+    for i ,px,py,pc in zip(range(len(labels)), x, y, node_color):
         l = labels[i]
-        ax1.annotate(l,xy=(x[i],y[i]),size=15,color="red")
+        ax1.scatter(px, py, s=50, c=pc)
+        ax1.annotate(l,xy=(x[i],y[i]),size=11,color="red")
     # plt.show()
     plt.axis('equal')
     plt.savefig(dst)
