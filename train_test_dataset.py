@@ -43,7 +43,8 @@ def train(seed=0,
           pos_dim=2,
           node_exs=False,
           pos_exs=False,
-          dist_exs=False):
+          dist_exs=False,
+          lr=0.01):
 
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
     new_dir = con_d.dir_ct(-1).append_file()
@@ -66,8 +67,8 @@ def train(seed=0,
     node_color = con_d.pos_2_color(node_tf_data)
     
     for _,map_view in enumerate(seed):
-        map_xy=node_pos[map_view]
-        map_n=node_tf_data.get_node_n()[2][map_view]
+        map_xy=node_pos[_]
+        map_n=node_tf_data.get_node_n()[2][_]
         con_d.draw_map(map_xy,map_n,show=show,save=True,seed_num=map_view)
     
     embed_dim = 2
@@ -90,7 +91,7 @@ def train(seed=0,
     d2p = Dist2Pos(node_num_sum, embed_dim, train_set.node_pos).to(device)
 
     criterion = torch.nn.L1Loss()   #MAE,誤差関数を指定
-    optimizer = torch.optim.Adam(d2p.parameters(), lr=0.005)
+    optimizer = torch.optim.Adam(d2p.parameters(), lr=lr)
     scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=math.floor(mx_ep/5), eta_min=0.0001)
 
     # output grandtrutha as gt.png.
@@ -176,32 +177,33 @@ if __name__ == "__main__":
     
     tr=1
     
-    seed = (1,1)
-    fc_seed = range(2,14)
+    seed = ((4,),(5,),(6,),(7,))
+    fc_seed = [0]
     
-    len_seed=len(seed)
+    len_seed=1#len(seed)
     node_tf_exs=[False]*len_seed
     pos_exs=[False]*len_seed
     dist_exs=[False]*len_seed
-    ep_m = 1
+    ep_m = 70
+    lr=0.001
     #memo = "{}f_2p_cs{:0=2}".format(len(seed),fc_seed)
     
     #con_d.map_preview(seed)
     
-    ani_tr=False #generating gif animation after training.
+    ani_tr=True #generating gif animation after training.
     ani_time=3  #animation time length.
     ani_file_n=0    #how many pictures use when animation generating. if '0' , all pictures in processing file will be used.
 
     def_dir=os.path.join(os.path.dirname(__file__),"outputs")
     #output_dir=con_d.rt_dir(def_dir)
-    for tr_loop in fc_seed:
+    for seed_i in range(len(seed)):
         output_dir=con_d.dir_ct(-1).append_file()
-        memo = "dist_mtx_{}f_2p_cs{:0=2}".format(len(seed),tr_loop)
+        memo = "seed_{:0=2}_lr={}".format(seed[seed_i][0],lr)
         if (tr):
             #n=con_d.exsit_2_number('pos',seed)[1]
-            train(seed=seed, fc_seed=tr_loop, memo=memo, show=False,
+            train(seed=seed[seed_i], fc_seed=fc_seed, memo=memo, show=False,
                 ep_m=ep_m, pos_dim=2, node_exs=node_tf_exs, pos_exs=pos_exs,
-                dist_exs=dist_exs)
+                dist_exs=dist_exs,lr=lr)
         
         if (0): #profiling
             profile_test()
