@@ -14,6 +14,9 @@ import glob
 import re
 
 from functools import lru_cache
+from concurrent.futures import ThreadPoolExecutor
+from multiprocessing import Pool, Manager
+import copy
 
 f_inf = np.inf
 
@@ -85,9 +88,9 @@ class datas:
                 seed_dic.update(seed_any)
             elif type(seed_any)==list or type(seed_any)==tuple:
                 for k,v in enumerate(seed_any):
-                    seed_dic['seed_{:0=2}th'.format(k)]=v
+                    seed_dic[k]=v
             else:
-                seed_dic['seed_01th']=seed_any
+                seed_dic[0]=seed_any
             return seed_dic
 
         def get_dataset(node_tf_dic,seed_dic):
@@ -130,11 +133,11 @@ class datas:
     def get_pos(self):  #点の座標呼び出し
         pos_data=[]
         for key,pos_tf_value in self.pos_tf_exs.items():
-            nth_seed = self.seed[key]
+            nth_seed = key
             if pos_tf_value:
                 pos_data.append(import_data(nth_seed,mode='node_pos'))
             else:
-                pos_data.append(node_tf2pos(nth_seed,self.dim,self.node_tf[nth_seed]))
+                pos_data.append(node_tf2pos(nth_seed,self.dim,self.node_tf[key]))
         return pos_data
     
     def get_dist(self):  #時間行列の呼び出し
@@ -144,22 +147,23 @@ class datas:
             if dist_tf_value:
                 dist_data.append(import_data(nth_seed,mode='dist_mat'))
             else:
-                dist_data.append(make_dist(nth_seed,self.node_tf[nth_seed]))
+                dist_data.append(make_dist(nth_seed,self.node_tf[key]))
         return dist_data
 
 def import_data(seed_value=0,mode='node_tf'):
         #mode=('node_tf','node_pos','dist_mat')
     try:
-        path=os.path.join(os.path.dirname(__file__),'import',mode,'{:0=3}.txt'.format(seed_value))
+        path=os.path.join(os.path.dirname(__file__),'imputs',mode,'{:0=3}.txt'.format(seed_value))
     except:
         print("\n\n /import/{mode} 内に{seed_value}.txtが存在しません。\n\n")
-        path=os.path.join(os.path.dirname(__file__),'import',mode,'default.txt'.format(seed_value))
+        path=os.path.join(os.path.dirname(__file__),'imputs',mode,'default.txt'.format(seed_value))
     
     with open(path) as f:
         line=f.read().splitlines()
     line=line[1] if line[1] else line[0]
-    pt=re.compile(r'(\D)')
-    delimiter=re.search(pt,line).group(0)
+    #pt=re.compile(r'(\D[^\.])')
+    #delimiter=re.search(pt,line).group(0)
+    delimiter = "\t"
     i_data=np.loadtxt(path,delimiter=delimiter)
     print(i_data)
     return i_data
@@ -198,6 +202,15 @@ def make_dist(seed_nth,node_tf,unit_h=1,unit_v=1):
                 dist_mat[j,i]=dist_mat[i,j]
     return dist_mat
 
+def wf_parallel(k,n,dd):
+    #dd=dd.copy()
+    #dd_copy = copy.deepcopy(dd)
+    for i in range(n):
+        for j in range(n):
+            dd[i][j] = min(dd[i][j],dd[i][k]+dd[k][j])
+    print("k:{:0=4}/{}".format(k,n))
+    return dd
+
 def mat_connect(cl, dist_data):
     pos_n, fc_seed = cl.get_node_n(), cl.fc_seed
     p_sum , p_ele = pos_n[1] , pos_n[2]
@@ -211,8 +224,10 @@ def mat_connect(cl, dist_data):
             for i in range(n):
                 for j in range(n):
                     dd[i,j] = min(dd[i,j],dd[i,k]+dd[k,j])
+            print("{:0=3}/{}".format(k,n))
         dist_out(n,dd)
         return dd
+
 
     for y in range(mat_len):
         for x in range(mat_len):
@@ -246,7 +261,18 @@ def mat_connect(cl, dist_data):
                 v[p_sum[j1]+fp[i][j1],p_sum[j2]+fp[i][j2]]=co[i][j1]
                 v[p_sum[j2]+fp[i][j2],p_sum[j1]+fp[i][j1]]=co[i][j1]
                 j1=j2
-    return wf(v)
+    #return wf(v)
+    n=len(v)
+    #with ThreadPoolExecutor() as executor:
+    #    executor.map(lambda k :wf_parallel(k,n,v),range(n))
+    #with Manager() as manager:
+    #    v_s=manager.list(v.tolist())
+    #    with Pool() as pool:
+    #        pool.starmap(wf_parallel, [(k, n, v_s) for k in range(n)])
+    #    v=np.array(v_s)
+    v = wf(v)
+    #np.savetxt(os.path.join(dir_ct().append_file(),"dist_matrix.txt"),v,fmt='%.2f',delimiter='\t')
+    return v
 
 #------------削除予定---------------#
 def _old():
@@ -560,24 +586,65 @@ def get_node_tf(seed:int):
             ]).astype(np.uint8)
     elif(seed==2):
         rt_data=np.array([
-            [1,1,1,1,1,1],
-            [1,1,1,1,1,1],
-            [1,0,1,0,0,1],
-            [0,0,0,0,0,0],
-            [0,0,0,0,0,0]
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
             ]).astype(np.uint8)
     elif(seed==3):
         rt_data=np.array([
-            [1,1,1,1,1,1],
-            [1,1,1,1,1,1],
-            [1,0,1,0,0,1]
+            [1,0,0,1,0],
+            [1,0,1,0,0],
+            [1,1,1,1,1],
+            [1,1,0,0,0]
             ]).astype(np.uint8)
+    elif(seed==4):
+        rt_data=np.array([
+            [1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1]
+            ]).astype(np.uint8)
+    elif(seed==5):
+        rt_data=np.array([
+            [1,1,1,1,1,1],
+            [1,1,1,1,1,1],
+            [1,1,0,0,0,0],
+            [1,1,1,1,1,1],
+            [1,1,1,1,1,1]
+            ]).astype(np.uint8)
+    elif(seed==6):
+        rt_data=np.array([
+            [1,1,1,1,1,1],
+            [1,1,1,1,1,1],
+            [1,1,0,0,1,1],
+            [1,1,0,0,1,1],
+            [1,1,1,1,1,1],
+            [1,1,1,1,1,1]
+            ]).astype(np.uint8)
+    elif(seed==7):
+        rt_data=np.array([
+            [1,1,1,1,1,1],
+            [1,1,1,1,1,1],
+            [1,0,0,0,0,0],
+            [1,0,1,1,1,1],
+            [1,0,1,1,0,1],
+            [1,0,1,1,0,1],
+            [1,0,1,1,0,1],
+            [1,0,0,0,0,1],
+            [1,1,1,1,1,1],
+            [1,1,1,1,1,1]
+            ]).astype(np.uint8)
+
+
     return rt_data
 
 def get_floor_connection(c):
     if (c==0):
-        c_p=[[0,0],[42,42]]
-        cost=[[1.2],[1.2]]
+        c_p=[[0,0]]
+        cost=[[1.2]]
     elif (c==1):
         c_p=[[0,0,0],[5,-2,5],[-1,3,3]]
         cost=[[1.2,1.2],[1.2]]
@@ -585,10 +652,10 @@ def get_floor_connection(c):
         c_p=[[0,0]]
         cost=[[1.2]]
     elif (c==3):
-        c_p=[[4,4]]
+        c_p=[[3,3]]
         cost=[[1.2]]
     elif (c==4):
-        c_p=[[11,11]]
+        c_p=[[10,10]]
         cost=[[1.2]]
     elif (c==5):
         c_p=[[0,0],[6,6]]
@@ -621,6 +688,8 @@ def get_floor_connection(c):
         #V字状
         c_p=[[0,0],[6,6],[17,17]]
         cost=[[1.2]]
+    else :
+        c_p,cost=[[0,0]],[[1.2]]
     
     
     return [c_p,cost]
