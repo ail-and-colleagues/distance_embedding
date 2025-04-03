@@ -1,5 +1,4 @@
 # convert_dataset.py  
-主に強化学習用のデータセットを作るためのpythonプロジェクト。 
 ***
 ### class netwrk_test()
 networkXを使ったノード配置の図示を試すためのもの。
